@@ -58,19 +58,21 @@ class RotatablePolygon {
     this.board = board
     const localVerticesProps = {
       visible: debugVertices,
-      snapToGrid: true,
-      snapSizeX: 1,
-      snapSizeY: 1,
     }
     const mergedVerticesProps = {
-      ...localVerticesProps, ...verticesProps,
+      ...localVerticesProps,
+      ...verticesProps,
+      snapToGrid: false,
     }
     // Center
     const centerProps = {
+      snapToGrid: true,
+      snapSizeX: 1,
+      snapSizeY: 1,
       ...mergedVerticesProps,
       visible: true,
       name: '',
-      fillColor: 'blue',
+      color: 'blue',
     }
     this.center = board.create('point', vertices[0], centerProps)
     // Glider
@@ -82,7 +84,7 @@ class RotatablePolygon {
     const gliderProps = {
       ...mergedVerticesProps,
       visible: true,
-      face: 'circle',
+      face: 'plus',
       name: '',
     }
     this.glider = board.create('glider',
@@ -108,6 +110,10 @@ class RotatablePolygon {
         const angle = Math.atan2(
           me.glider.Y() - me.center.Y(),
           me.glider.X() - me.center.X())
+        // Rotation Snap code
+        // const angleStep = 2 * Math.PI / me.rotSnap
+        // const steps = angle / angleStep
+        // angle = angleStep * Math.round(steps)
         return angle - me.angleCg
       }, this.center, ],
       { type: 'rotate', })
