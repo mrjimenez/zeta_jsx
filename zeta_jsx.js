@@ -163,6 +163,179 @@ class RotatablePolygon {
 // -------------------------------------------------------------------------------
 
 // eslint-disable-next-line no-unused-vars
+class DiscreteRotationPolygon {
+  constructor(board, numRotations, vertices, verticesProps, polygonProps) {
+    const debugVertices = false
+    this.board = board
+    // Properties
+    const localVerticesProps = {
+      visible: debugVertices,
+    }
+    const mergedVerticesProps = {
+      ...localVerticesProps,
+      ...verticesProps,
+      snapToGrid: false,
+    }
+    // Center
+    const centerProps = {
+      snapToGrid: true,
+      snapSizeX: 1,
+      snapSizeY: 1,
+      ...mergedVerticesProps,
+      visible: true,
+      name: debugVertices ? 'center' : '',
+      color: 'blue',
+    }
+    let v = vertices
+    // The center and the original position of the center
+    this.center = board.create('point', v[0], centerProps)
+    this.center.on('drag', () => {
+      var me = this
+      me.phantom.moveTo([me.glider.X(), me.glider.Y(), ])
+    })
+    this.origCenter = v[0]
+    // The center translation
+    const centerTranslation = board.create('transform', [
+      () => {
+        var me = this
+        return me.center.X() - me.origCenter[0]
+      },
+      () => {
+        var me = this
+        return me.center.Y() - me.origCenter[1]
+      }, ],
+      { type: 'translate', })
+    // Glider, phantom and reference points
+    // - Glider is the point that belongs to the polygon that moves.
+    // - Phantom is the point that is dragged.
+    // - Reference points are the possible glider positions.
+    const gliderProps = {
+      ...mergedVerticesProps,
+      visible: true,
+      face: 'plus',
+      name: debugVertices ? 'glider' : '',
+    }
+    const phantomProps = {
+      ...mergedVerticesProps,
+      visible: true,
+      face: 'plus',
+      name: debugVertices ? 'phantom' : '',
+    }
+    const referenceProps = {
+      ...mergedVerticesProps,
+      visible: debugVertices,
+      face: 'plus',
+      name: 'ref',
+    }
+    this.numRotations = numRotations
+    this.phantom = board.create('point', vertices[1], phantomProps)
+    this.phantom.on('up', () => {
+      var me = this
+      me.phantom.moveTo([me.glider.X(), me.glider.Y(), ])
+    })
+    this.reference0 = board.create('point', vertices[1],
+      { ...phantomProps, name: 'ref0', visible: false, }
+    )
+    const discreteRotation = board.create('transform',
+      [2 * Math.PI / numRotations, this.center, ],
+      { type: 'rotate', })
+    this.references = []
+    //
+    let p = this.reference0
+    for (let i = 0; i < numRotations; ++i) {
+      if (i === 0) {
+        p = board.create('point', [p, [centerTranslation, ], ], referenceProps)
+      } else {
+        p = board.create('point', [p, [discreteRotation, ], ], referenceProps)
+      }
+      this.references.push(p)
+    }
+    // Which is the current reference point?
+    let refIndex = function (me) {
+      let ret = 0
+      let dmin = 10000
+      for (let i = 0; i < me.references.length; ++i) {
+        let p = me.references[i]
+        const dx = me.phantom.X() - p.X()
+        const dy = me.phantom.Y() - p.Y()
+        const d = dx * dx + dy * dy
+        if (d < dmin) {
+          dmin = d
+          ret = i
+        }
+      }
+      return ret
+    }
+    this.glider = board.create('point', [
+      () => {
+        var me = this
+        return me.references[refIndex(me)].X()
+      },
+      () => {
+        var me = this
+        return me.references[refIndex(me)].Y()
+      },
+    ], gliderProps)
+    this.angleCenterGlider = Math.atan2(
+      this.glider.Y() - this.center.Y(),
+      this.glider.X() - this.center.X())
+    // All the other points
+    const gliderRotation = board.create('transform',
+      [() => {
+        var me = this
+        const angle = Math.atan2(
+          me.glider.Y() - me.center.Y(),
+          me.glider.X() - me.center.X())
+        return angle - me.angleCenterGlider
+      }, this.center, ],
+      { type: 'rotate', })
+    let pointsArray = [this.center, this.glider, ]
+    for (let i = 2; i < vertices.length; ++i) {
+      let q = board.create('point', vertices[i], { visible: false, })
+      let p = board.create('point', [q, [centerTranslation, gliderRotation, ], ], mergedVerticesProps)
+      pointsArray.push(p)
+    }
+    const localPolygonProps = {
+      fillColor: '#00FF00',
+      highlightFillColor: '#00FF00',
+      fillOpacity: 1.0,
+      highlightFillOpacity: 1.0,
+      // As propriedades abaixo garantem que a gente consegue
+      // transladar o polígono sem destruí-lo.
+      hasInnerPoints: true,
+      vertices: {
+        visible: false,
+      },
+      withLines: false,
+    }
+    const mergedPolygonProps = {
+      ...localPolygonProps, ...polygonProps,
+    }
+    this.vertices = pointsArray
+    this.polygon = board.create('polygon', pointsArray, mergedPolygonProps)
+  }
+  /* moveTo(): Método para mover um polígono rodável discreto
+   *
+   * Precisa mover o centro, o glider e o phantom
+   *
+   * Parâmetros:
+   * - position: Nova posição do centro de rotação.
+   */
+  moveTo(position) {
+    const deltaX = position[0] - this.center.X()
+    const deltaY = position[1] - this.center.Y()
+    let p = this.center
+    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
+    p = this.glider
+    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
+    p = this.phantom
+    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
+  }
+}
+
+// -------------------------------------------------------------------------------
+
+// eslint-disable-next-line no-unused-vars
 class Figura {
   constructor(board, local, xFig, yFig, lFig, aFig) {
     this.fig = board.create('image', [local, [xFig, yFig, ], [lFig, aFig, ], ],

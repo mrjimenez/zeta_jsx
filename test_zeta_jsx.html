@@ -173,55 +173,15 @@
         visible: false,
       },
     }
-    // var poligono4 = board.create('polygon', vertices4, properties4)
-    g4 = []
-    for (p of vertices4) {
-      g4.push(board.create('point', p, { visible: false }));
-    }
-    // var group4 = board.create('group', g)
-    var p1 = board.create('point', [-20, -20], { name: 'Z' });
-    p1.on('up', function () {
-      p1.moveTo([p2.X(), p2.Y()])
-    })
-    let px = function () {
-      let dmin = 10000
-      let xpmin = 0
-      for (p of g4) {
-        const dx = p1.X() - p.X()
-        const dy = p1.Y() - p.Y()
-        const d = dx * dx + dy * dy
-        if (d < dmin) {
-          dmin = d
-          xpmin = p.X()
-        }
-      }
-      return xpmin
-    }
-    let py = function () {
-      let dmin = 10000
-      let ypmin = 0
-      for (p of g4) {
-        const dx = p1.X() - p.X()
-        const dy = p1.Y() - p.Y()
-        const d = dx * dx + dy * dy
-        if (d < dmin) {
-          dmin = d
-          ypmin = p.Y()
-        }
-      }
-      return ypmin
-    }
-    var p2 = board.create('point', [px, py], { name: 'Y' });
-    // var c1 = board.create('circle', [p1, 5.0]);
-    // var p2 = board.create('glider', [2.0, 1.5, c1]);
-    // var p2 = board.create('glider', [2.0, 1.5, poligono4]);
-    // var p2 = board.create('glider', [2.0, 1.5, group4]);
+    // g4 = []
+    // for (p of vertices4) {
+    //   g4.push(board.create('point', p, { visible: false }));
+    // }
+    // var group4 = board.create('group', g4)
+    pol4 = new DiscreteRotationPolygon(board, 5, vertices4)
 
     //------------------------------------------------------------------------------
 
-    function confirmar() {
-
-    }
   </script>
 </body>
 
