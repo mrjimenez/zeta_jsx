@@ -331,6 +331,18 @@ class DiscreteRotationPolygon {
     p = this.phantom
     p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
   }
+  /* rotate(): Rotates a DiscreteRotationPolygon around the center.
+   *
+   * Parameters:
+   * - n: the number of discrete rotations to perform.
+   */
+  rotate(n) {
+    n = Math.round(n) % this.numRotations
+    let p = this.references[n]
+    let where = [p.X(), p.Y(), ]
+    this.glider.moveTo(where)
+    this.phantom.moveTo(where)
+  }
 }
 
 // -------------------------------------------------------------------------------
