@@ -53,7 +53,7 @@ class TranslatablePolygon {
 
 // eslint-disable-next-line no-unused-vars
 class RotatablePolygon {
-  constructor(board, vertices, verticesProps, polygonProps) {
+  constructor(board, vertices, verticesProps, polygonProps, centerProps) {
     const debugVertices = false
     this.board = board
     const localVerticesProps = {
@@ -65,16 +65,17 @@ class RotatablePolygon {
       snapToGrid: false,
     }
     // Center
-    const centerProps = {
+    const mergedCenterProps = {
+      ...mergedVerticesProps,
       snapToGrid: true,
       snapSizeX: 1,
       snapSizeY: 1,
-      ...mergedVerticesProps,
       visible: true,
       name: '',
       color: 'blue',
+      ...centerProps,
     }
-    this.center = board.create('point', vertices[0], centerProps)
+    this.center = board.create('point', vertices[0], mergedCenterProps)
     // Glider
     const dx = vertices[1][0] - vertices[0][0]
     const dy = vertices[1][1] - vertices[0][1]
@@ -164,8 +165,9 @@ class RotatablePolygon {
 
 // eslint-disable-next-line no-unused-vars
 class DiscreteRotationPolygon {
-  constructor(board, numRotations, vertices, verticesProps, polygonProps) {
+  constructor(board, numRotations, vertices, verticesProps, polygonProps, centerProps) {
     const debugVertices = false
+    // const debugVertices = true
     this.board = board
     // Properties
     const localVerticesProps = {
@@ -177,21 +179,31 @@ class DiscreteRotationPolygon {
       snapToGrid: false,
     }
     // Center
-    const centerProps = {
+    const mergedCenterProps = {
+      ...mergedVerticesProps,
       snapToGrid: true,
       snapSizeX: 1,
       snapSizeY: 1,
-      ...mergedVerticesProps,
       visible: true,
       name: debugVertices ? 'center' : '',
       color: 'blue',
+      ...centerProps,
     }
     let v = vertices
     // The center and the original position of the center
-    this.center = board.create('point', v[0], centerProps)
+    this.center = board.create('point', v[0], mergedCenterProps)
+    this.center.on('down', () => {
+      var me = this
+      me.phantom.setAttribute({ visible: false, })
+    })
     this.center.on('drag', () => {
       var me = this
       me.phantom.moveTo([me.glider.X(), me.glider.Y(), ])
+    })
+    this.center.on('up', () => {
+      var me = this
+      me.phantom.moveTo([me.glider.X(), me.glider.Y(), ])
+      me.phantom.setAttribute({ visible: true, })
     })
     this.origCenter = v[0]
     // The center translation
