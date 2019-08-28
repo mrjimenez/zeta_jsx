@@ -344,9 +344,11 @@ class DiscreteRotationPolygon {
     p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
   }
   /* rotate(): Rotates a DiscreteRotationPolygon around the center.
+   *           The value of n is an absolute position.
    *
    * Parameters:
-   * - n: the number of discrete rotations to perform.
+   * - n: the number of discrete rotations to perform from the initial
+   *      position.
    */
   rotate(n) {
     n = Math.round(n) % this.numRotations
@@ -354,6 +356,28 @@ class DiscreteRotationPolygon {
     let where = [p.X(), p.Y(), ]
     this.glider.moveTo(where)
     this.phantom.moveTo(where)
+  }
+  /* rotateRelative():  Rotates a DiscreteRotationPolygon around the center.
+   *                    The value of n is a relative position.
+   *
+   * Parameters:
+   * - n: the number of discrete rotations to perform from the current position.
+   */
+  rotateRelative(n) {
+    let i = 0
+    let found = false
+    while (!found) {
+      let p = this.references[i]
+      found =
+        this.glider.X() === p.X() &&
+        this.glider.Y() === p.Y()
+      if (found) {
+        break
+      }
+      ++i
+    }
+    n += i
+    this.rotate(n)
   }
 }
 
