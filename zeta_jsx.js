@@ -448,3 +448,12 @@ class Drawing {
 }
 
 // -------------------------------------------------------------------------------
+
+export {
+  TranslatablePolygon,
+  RotatablePolygon,
+  DiscreteRotationPolygon,
+  Figura,
+  Drawing,
+}
+// -------------------------------------------------------------------------------
