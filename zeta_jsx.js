@@ -5,8 +5,12 @@
 // -------------------------------------------------------------------------------
 
 /*
-https://www.intmath.com/cg3/jsxgraph-coding-summary.php
-*/
+ * https://www.intmath.com/cg3/jsxgraph-coding-summary.php
+ */
+
+// -------------------------------------------------------------------------------
+
+// import JGX from 'jsxgraph'
 
 // -------------------------------------------------------------------------------
 
@@ -312,6 +316,7 @@ class DiscreteRotationPolygon {
       highlightFillColor: '#00FF00',
       fillOpacity: 1.0,
       highlightFillOpacity: 1.0,
+      clickToRotate: true,
       // As propriedades abaixo garantem que a gente consegue
       // transladar o polígono sem destruí-lo.
       hasInnerPoints: true,
@@ -325,6 +330,30 @@ class DiscreteRotationPolygon {
     }
     this.vertices = pointsArray
     this.polygon = board.create('polygon', pointsArray, mergedPolygonProps)
+    this.dragging = false
+    if (mergedPolygonProps.clickToRotate) {
+      this.polygon.on('up', () => {
+        if (!this.dragging) {
+          this.rotateRelative(1)
+        }
+        this.dragging = false
+      })
+    }
+    this.downDX = 0
+    this.downDY = 0
+    this.polygon.on('down', (e) => {
+      let coords = this.getMouseCoords(e, 0)
+      this.downDX = this.center.X() - coords.usrCoords[1]
+      this.downDY = this.center.Y() - coords.usrCoords[2]
+    })
+    this.polygon.on('drag', (e) => {
+      this.dragging = true
+      let coords = this.getMouseCoords(e, 0)
+      let cx = coords.usrCoords[1] + this.downDX
+      let cy = coords.usrCoords[2] + this.downDY
+      // console.log(`dragging=${this.dragging} coords=(${cx},${cy})`)
+      this.moveTo([cx, cy, ])
+    })
   }
   /* moveTo(): Método para mover um polígono rodável discreto
    *
@@ -336,20 +365,25 @@ class DiscreteRotationPolygon {
   moveTo(position) {
     const deltaX = position[0] - this.center.X()
     const deltaY = position[1] - this.center.Y()
+    let c = this.center
+    c.moveTo([c.X() + deltaX, c.Y() + deltaY, ])
+    let g = this.glider
+    g.moveTo([g.X() + deltaX, g.Y() + deltaY, ])
+    let p = this.phantom
+    // p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
+    p.moveTo([g.X(), g.Y(), ])
+  }
+  moveToRelative(delta) {
     let p = this.center
-    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
-    p = this.glider
-    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
-    p = this.phantom
-    p.moveTo([p.X() + deltaX, p.Y() + deltaY, ])
+    this.moveTo([p.X() + delta[0], p.Y() + delta[1], ])
   }
   /* rotate(): Rotates a DiscreteRotationPolygon around the center.
-   *           The value of n is an absolute position.
-   *
-   * Parameters:
-   * - n: the number of discrete rotations to perform from the initial
-   *      position.
-   */
+  *           The value of n is an absolute position.
+  *
+  * Parameters:
+  * - n: the number of discrete rotations to perform from the initial
+  *      position.
+  */
   rotate(n) {
     n = Math.round(n) % this.numRotations
     let p = this.references[n]
@@ -378,6 +412,17 @@ class DiscreteRotationPolygon {
     }
     n += i
     this.rotate(n)
+  }
+  /*
+   * https://jsxgraph.uni-bayreuth.de/wiki/index.php/Browser_event_and_coordinates
+   */
+  getMouseCoords(e, i) {
+    var cPos = this.board.getCoordsTopLeftCorner(e, i)
+    var absPos = JXG.getPosition(e, i)
+    var dx = absPos[0] - cPos[0]
+    var dy = absPos[1] - cPos[1]
+
+    return new JXG.Coords(JXG.COORDS_BY_SCREEN, [dx, dy, ], this.board)
   }
 }
 
@@ -449,11 +494,11 @@ class Drawing {
 
 // -------------------------------------------------------------------------------
 
-export {
-  TranslatablePolygon,
-  RotatablePolygon,
-  DiscreteRotationPolygon,
-  Figura,
-  Drawing,
-}
+// export {
+//   TranslatablePolygon,
+//   RotatablePolygon,
+//   DiscreteRotationPolygon,
+//   Figura,
+//   Drawing,
+// }
 // -------------------------------------------------------------------------------
